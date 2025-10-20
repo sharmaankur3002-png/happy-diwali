@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <title>Happy Diwali | Personalized Wishes</title>
     <meta name="theme-color" content="#3b1d5a" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,8 +18,6 @@
             --bg4: #ff8fab;
             --gold: #f8d66d;
             --gold-deep: #d4a72c;
-            --maroon: #6b1b2a;
-            --orange: #ff7a2f;
             --accent: #ffd7a8;
             --soft: #ffffffcc;
             --white: #fff;
@@ -37,11 +35,15 @@
             margin: 0;
             color: var(--soft);
             font-family: Poppins, system-ui, Arial, sans-serif;
-            /* Performance Optimization: Simplified background and animation for smoother redraw */
             background: linear-gradient(120deg, var(--bg1), var(--bg2), var(--bg3), var(--bg4));
             background-size: 400% 400%;
             animation: bgShift 16s ease-in-out infinite;
-            overflow-x: hidden;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            body {
+                animation: none
+            }
         }
 
         @keyframes bgShift {
@@ -58,11 +60,47 @@
             }
         }
 
+        /* Layers */
+        #fireworks {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            filter: saturate(1.2)
+        }
+
+        .particles {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            background-image:
+                radial-gradient(2px 2px at 20% 30%, rgba(255, 255, 255, .8) 40%, transparent 41%),
+                radial-gradient(1.5px 1.5px at 70% 60%, rgba(255, 255, 255, .6) 40%, transparent 41%),
+                radial-gradient(1.2px 1.2px at 40% 80%, rgba(255, 255, 255, .5) 40%, transparent 41%);
+            animation: drift 30s linear infinite;
+            opacity: .28;
+            will-change: transform;
+        }
+
+        @keyframes drift {
+            0% {
+                transform: translateY(0)
+            }
+
+            100% {
+                transform: translateY(-80px)
+            }
+        }
+
         .blinking-stars {
             position: fixed;
             inset: 0;
             z-index: 1;
-            pointer-events: none
+            pointer-events: none;
+            contain: layout paint size
         }
 
         .star {
@@ -71,8 +109,8 @@
             box-shadow: 0 0 10px #ffd700, 0 0 3px #fff;
             animation: blink 2s infinite alternate, moveStar 22s linear infinite;
             opacity: .7;
-            /* Performance Optimization: Use transform for movement */
             will-change: transform, opacity;
+            transform: translateZ(0);
         }
 
         @keyframes blink {
@@ -99,39 +137,6 @@
             }
         }
 
-        #fireworks {
-            position: fixed;
-            inset: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 0;
-            pointer-events: none;
-            filter: saturate(1.2)
-        }
-
-        .particles {
-            position: fixed;
-            inset: 0;
-            z-index: 1;
-            pointer-events: none;
-            background-image:
-                radial-gradient(2px 2px at 20% 30%, rgba(255, 255, 255, .8) 40%, transparent 41%),
-                radial-gradient(1.5px 1.5px at 70% 60%, rgba(255, 255, 255, .6) 40%, transparent 41%),
-                radial-gradient(1.2px 1.2px at 40% 80%, rgba(255, 255, 255, .5) 40%, transparent 41%);
-            animation: drift 30s linear infinite;
-            opacity: .35
-        }
-
-        @keyframes drift {
-            0% {
-                transform: translateY(0)
-            }
-
-            100% {
-                transform: translateY(-80px)
-            }
-        }
-
         .floating-diyas {
             position: fixed;
             inset: 0;
@@ -152,8 +157,8 @@
             animation: floatUpDown 6s ease-in-out infinite;
             animation-delay: var(--delay);
             filter: drop-shadow(0 0 6px rgba(255, 180, 40, .8));
-            /* Performance Optimization */
             will-change: transform, opacity;
+            transform: translateZ(0);
         }
 
         @keyframes floatUpDown {
@@ -162,10 +167,7 @@
                 opacity: 0
             }
 
-            10% {
-                opacity: 1
-            }
-
+            10%,
             90% {
                 opacity: 1
             }
@@ -187,7 +189,7 @@
             background: radial-gradient(ellipse at center, #fff7ad 0%, #ffa500 70%);
             border-radius: 50% 50% 45% 45%;
             filter: drop-shadow(0 0 6px rgba(255, 240, 150, .8));
-            animation: flameFlicker 1.2s ease-in-out infinite alternate
+            animation: flameFlicker 1.2s ease-in-out infinite alternate;
         }
 
         @keyframes flameFlicker {
@@ -413,8 +415,7 @@
 
         .photo-frame img {
             width: 100%;
-            max-width: 100%;
-            height: auto;
+            height: 100%;
             object-fit: cover;
             display: block;
             filter: contrast(1.05) saturate(1.1)
@@ -575,7 +576,6 @@
             margin-top: 5px
         }
 
-        /* Small visual for sparkleBurst to avoid layout trashing */
         .sparkle-burst {
             position: fixed;
             inset: 0;
@@ -624,19 +624,7 @@
                     <button id="clearForm" type="button" class="btn">Reset</button>
                 </div>
             </form>
-            <div id="ad-slot-1" style="margin-top:12px;text-align:center;">
-                <script type="text/javascript">
-                    atOptions = {
-                        'key': '5f2e175e82392c7d79a9e2b135a26c96',
-                        'format': 'iframe',
-                        'height': 50,
-                        'width': 320,
-                        'params': {}
-                    };
-                </script>
-                <script type="text/javascript"
-                    src="//www.highperformanceformat.com/5f2e175e82392c7d79a9e2b135a26c96/invoke.js"></script>
-            </div>
+            <div id="ad-slot-1" style="margin-top:12px;text-align:center;"></div>
         </section>
 
         <section id="greet-view" class="card hidden">
@@ -671,35 +659,30 @@
                 <a id="waShare" class="btn" target="_blank" rel="noopener">WhatsApp 📱</a>
             </div>
 
-            <div id="ad-slot-2" style="margin-top:12px;text-align:center;">
-                <script type="text/javascript">
-                    atOptions = {
-                        'key': '5f2e175e82392c7d79a9e2b135a26c96',
-                        'format': 'iframe',
-                        'height': 50,
-                        'width': 320,
-                        'params': {}
-                    };
-                </script>
-                <script type="text/javascript"
-                    src="//www.highperformanceformat.com/5f2e175e82392c7d79a9e2b135a26c96/invoke.js"></script>
-            </div>
+            <div id="ad-slot-2" style="margin-top:12px;text-align:center;"></div>
         </section>
     </main>
 
-    <audio id="bgm" loop preload="auto" src="happy music.mp3"></audio>
+    <!-- Preload and allow inline playback for iOS -->
+    <audio id="bgm" loop preload="auto" playsinline webkit-playsinline src="happy music.mp3"></audio>
 
     <script>
-        // ----- Blinking, moving stars -----
+        // ====== Perf helpers: idle scheduling and throttling ======
+        const onIdle = (fn) => ('requestIdleCallback' in window) ? requestIdleCallback(fn, { timeout: 1500 }) : setTimeout(fn, 0); // [MDN perf patterns]
+        const defer = (fn) => setTimeout(fn, 0);
+
+        // ====== Stars (reduced count, re-spawn on resize with debounce) ======
         function spawnBlinkingStars() {
             const starDiv = document.querySelector('.blinking-stars');
             starDiv.innerHTML = '';
-            // Performance Optimization: Reduced the number of stars from 64 to 40
-            const stars = 40;
-            for (let i = 0; i < stars; i++) {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            // Fewer stars on mobile to avoid jank
+            const base = width < 600 ? 26 : 40;
+            for (let i = 0; i < base; i++) {
                 const star = document.createElement('div');
                 star.className = 'star';
-                const size = 2 + Math.random() * 3; // Slightly reduced max size
+                const size = 1.6 + Math.random() * (width < 600 ? 2.2 : 3);
                 const color = Math.random() < 0.5 ? '#fff' : '#ffd700';
                 star.style.width = star.style.height = size + 'px';
                 star.style.background = color;
@@ -710,11 +693,13 @@
             }
         }
         spawnBlinkingStars();
-        window.addEventListener('resize', spawnBlinkingStars);
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(spawnBlinkingStars, 150);
+        });
 
-        // ----- Fireworks JS -----
-        // NOTE: The fireworks script is kept as-is, but its animation interval (MIN_INT/MAX_INT)
-        // could be further increased (e.g., to 24/36) if more performance is needed.
+        // ====== Fireworks (RAF optimized, capped FPS, lower particles on mobile) ======
         (function () {
             const canvas = document.getElementById('fireworks');
             if (!canvas) return;
@@ -728,12 +713,20 @@
                 canvas.style.height = window.innerHeight + 'px';
             }
             resize();
-            window.addEventListener('resize', resize);
-            const GRAVITY = 0.03,
-                FIREWORKS = [];
-            const MAX_PARTICLES = 56,
-                MIN_INT = 16,
-                MAX_INT = 26; // These control spawn rate, higher numbers = less fireworks = better performance
+            window.addEventListener('resize', () => { defer(resize); });
+
+            const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            const GRAVITY = 0.03;
+            const FIREWORKS = [];
+            const MAX_PARTICLES = isMobile ? 36 : 56;   // reduce particles on mobile [MDN canvas optimize]
+            const MIN_INT = isMobile ? 20 : 16;         // spawn interval bounds (higher = fewer spawns)
+            const MAX_INT = isMobile ? 32 : 26;
+
+            // Cap FPS to ease main thread pressure [rAF best practices]
+            const TARGET_FPS = isMobile ? 45 : 60;
+            const FRAME_INTERVAL = 1000 / TARGET_FPS;
+            let lastTime = performance.now();
+            let tick = 0, next = Math.floor(MIN_INT + Math.random() * (MAX_INT - MIN_INT));
 
             function spawn(x = Math.random() * W, y = H * 0.3 + Math.random() * H * 0.35) {
                 const hue = Math.floor(180 + Math.random() * 180);
@@ -742,47 +735,45 @@
                     const ang = (Math.PI * 2) * (i / MAX_PARTICLES) + Math.random() * 0.35;
                     const sp = 1.5 + Math.random() * 2.1;
                     parts.push({
-                        x,
-                        y,
-                        vx: Math.cos(ang) * sp,
-                        vy: Math.sin(ang) * sp,
-                        life: 0,
-                        maxLife: 60 + Math.floor(Math.random() * 28),
-                        hue,
-                        size: 0.8 + Math.random() * 1.8
+                        x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
+                        life: 0, maxLife: 52 + Math.floor(Math.random() * 24), // slightly reduced
+                        hue, size: 0.8 + Math.random() * 1.6
                     });
                 }
-                FIREWORKS.push({
-                    parts
-                });
+                FIREWORKS.push({ parts });
             }
-            let tick = 0,
-                next = Math.floor(MIN_INT + Math.random() * (MAX_INT - MIN_INT));
-            (function loop() {
+
+            function loop(now) {
+                requestAnimationFrame(loop);
+                const delta = now - lastTime;
+                if (delta < FRAME_INTERVAL) return; // skip to throttle FPS
+                lastTime = now;
+
                 ctx.globalCompositeOperation = 'destination-out';
                 ctx.fillStyle = 'rgba(0,0,0,0.08)';
                 ctx.fillRect(0, 0, W, H);
                 ctx.globalCompositeOperation = 'lighter';
+
                 if (tick % next === 0) {
                     spawn();
-                    if (Math.random() < 0.45) spawn(W * Math.random() * 0.5, H * (0.25 + Math.random() * 0.5));
+                    if (Math.random() < 0.35) spawn(W * Math.random() * 0.5, H * (0.25 + Math.random() * 0.5));
                     next = Math.floor(MIN_INT + Math.random() * (MAX_INT - MIN_INT));
                 }
                 tick++;
+
                 for (let f = FIREWORKS.length - 1; f >= 0; f--) {
                     const fw = FIREWORKS[f];
                     for (const p of fw.parts) {
                         p.life++;
                         p.vy += GRAVITY * 0.15;
-                        p.x += p.vx;
-                        p.y += p.vy;
+                        p.x += p.vx; p.y += p.vy;
                         const a = Math.max(0, 1 - p.life / p.maxLife);
                         const sat = 80 + Math.sin((p.life / 8)) * 20;
                         ctx.beginPath();
                         ctx.fillStyle = `hsla(${p.hue}, ${sat}%, 60%, ${a * 0.9})`;
                         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                         ctx.fill();
-                        if (Math.random() < 0.25) {
+                        if (!isMobile && Math.random() < 0.22) {
                             ctx.beginPath();
                             ctx.fillStyle = `hsla(${p.hue}, 90%, 80%, ${a * 0.35})`;
                             ctx.arc(p.x + (Math.random() - 0.5) * 3, p.y + (Math.random() - 0.5) * 3, 0.8, 0, Math.PI * 2);
@@ -792,65 +783,50 @@
                     fw.parts = fw.parts.filter(p => p.life < p.maxLife);
                     if (!fw.parts.length) FIREWORKS.splice(f, 1);
                 }
-                requestAnimationFrame(loop);
-            })();
-            // Kept the click to spawn fireworks to maintain original functionality
+            }
+            requestAnimationFrame(loop);
+
             window.addEventListener('click', (e) => {
                 if (e.target.closest('button, a, input, label')) return;
-                spawn(e.clientX, e.clientY);
-            });
+                spawn(e.clientX * dpr, e.clientY * dpr);
+            }, { passive: true });
         })();
 
-        // ----- Music + prefs (Updated for aggressive autoplay) -----
-        function getParams() {
-            return new URL(window.location.href).searchParams;
-        }
+        // ====== Music logic with strong mobile support ======
+        // Policy: Autoplay requires user gesture; implement first-tap play reliably, esp. iOS [MDN Autoplay]
+        function getParams() { return new URL(window.location.href).searchParams; }
         const bgm = document.getElementById('bgm');
         const musicToggle = document.getElementById('musicToggle');
 
-        function setMusicIcon(isOn) {
-            musicToggle.textContent = isOn ? '🔊' : '🔇';
-        }
+        function setMusicIcon(isOn) { musicToggle.textContent = isOn ? '🔊' : '🔇'; }
+        function saveMusicPref(isOn) { try { localStorage.setItem('happy_music_on', isOn ? '1' : '0'); } catch { } }
+        function getMusicPref() { try { return localStorage.getItem('happy_music_on') !== '0'; } catch { return true; } }
 
-        function saveMusicPref(isOn) {
-            try {
-                localStorage.setItem('happy_music_on', isOn ? '1' : '0');
-            } catch { }
-        }
-
-        function getMusicPref() {
-            try {
-                return localStorage.getItem('happy_music_on') !== '0';
-            } catch {
-                return true;
-            }
-        }
-
-        async function tryPlayBgm() {
-            if (bgm.src && getMusicPref()) {
+        // iOS requires playsinline and a direct gesture on the element or within same task chain [MDN Autoplay]
+        async function tryPlayBgm(force = false) {
+            if (!bgm.src) return;
+            if (!force && !getMusicPref()) { setMusicIcon(false); return; }
+            // Ensure ready
+            try { await bgm.play(); setMusicIcon(true); saveMusicPref(true); }
+            catch (e) {
+                // Fallback: set muted true -> play -> unmute pattern helps some WebKit builds for first-resume [industry workaround]
                 try {
+                    bgm.muted = true;
                     await bgm.play();
-                    setMusicIcon(true);
-                    saveMusicPref(true);
+                    setTimeout(() => { bgm.muted = false; }, 200);
+                    setMusicIcon(true); saveMusicPref(true);
                 } catch {
                     setMusicIcon(false);
                 }
-            } else {
-                setMusicIcon(false);
             }
         }
 
         musicToggle.addEventListener('click', async () => {
-            if (bgm.paused) {
-                await tryPlayBgm();
-            } else {
-                bgm.pause();
-                setMusicIcon(false);
-                saveMusicPref(false);
-            }
+            if (bgm.paused) { await tryPlayBgm(true); }
+            else { bgm.pause(); setMusicIcon(false); saveMusicPref(false); }
         });
 
-        // ----- Main App Logic -----
+        // ====== App state ======
         const createView = document.getElementById('create-view');
         const greetView = document.getElementById('greet-view');
         const senderNameInput = document.getElementById('senderName');
@@ -862,38 +838,31 @@
         const createYourOwn = document.getElementById('createYourOwn');
         let currentShareUrl = '';
 
-        function buildShareUrl({
-            name
-        }) {
+        function buildShareUrl({ name }) {
             const u = new URL(window.location.href.split('?')[0]);
             u.searchParams.set('name', name);
             return u.toString();
         }
-
         function buildShareMessage(name, url) {
             const line1 = `🎇 ${name} has sent you a sparkling Diwali greeting!`;
             const line2 = `Wishing you happiness, success, and endless joy. 🌟`;
             const line3 = `🎁 Click here to view your personalized message!`;
             return `${line1}\n${line2}\n${line3}\n${url}`;
         }
-
         function setShareTargets(url, name) {
             currentShareUrl = url;
             const msg = buildShareMessage(name, url);
             const encodedMsg = encodeURIComponent(msg);
             waShare.href = `https://wa.me/?text=${encodedMsg}`;
         }
+
         universalShare.addEventListener('click', async () => {
             const name = senderNameInput.value.trim() || senderLabel.textContent.trim() || 'Someone';
             const msg = buildShareMessage(name, currentShareUrl || window.location.href);
             if (navigator.share) {
                 try {
-                    await navigator.share({
-                        title: 'Happy Diwali Personalized Wish',
-                        text: msg,
-                        url: undefined
-                    });
-                } catch (error) {
+                    await navigator.share({ title: 'Happy Diwali Personalized Wish', text: msg });
+                } catch {
                     copyShareLinkFallback(currentShareUrl || window.location.href);
                 }
             } else {
@@ -913,15 +882,10 @@
         document.getElementById('create-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const name = senderNameInput.value.trim();
-            if (!name) {
-                senderNameInput.focus();
-                return;
-            }
+            if (!name) { senderNameInput.focus(); return; }
             recipientPhoto.src = 'diwali photo.jpg';
             senderLabel.textContent = name;
-            const url = buildShareUrl({
-                name
-            });
+            const url = buildShareUrl({ name });
             setShareTargets(url, name);
             createView.classList.add('hidden');
             greetView.classList.remove('hidden');
@@ -938,10 +902,7 @@
             greetView.classList.add('hidden');
             createView.classList.remove('hidden');
             sparkleBurst();
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
 
         function sparkleBurst() {
@@ -959,46 +920,71 @@
                 recipientPhoto.src = 'diwali photo.jpg';
                 createView.classList.add('hidden');
                 greetView.classList.remove('hidden');
-                const url = buildShareUrl({
-                    name
-                });
+                const url = buildShareUrl({ name });
                 setShareTargets(url, name);
             }
             setMusicIcon(!bgm.paused && getMusicPref());
         }
         bootFromParams();
 
-        // Music auto-start on first interaction (FIXED: Attempts to play music on *any* click/tap on the document body)
+        // ====== Mobile-first gesture hook for audio ======
+        // Attach to body and also to first input focus to catch iOS taps reliably [MDN Autoplay]
         let hasInteracted = false;
-        function handleInteraction() {
+        async function handleInteractionOnce() {
             if (hasInteracted) return;
             hasInteracted = true;
-            tryPlayBgm();
-            // Remove handlers after the first successful interaction
-            document.body.removeEventListener('click', handleInteraction);
-            document.body.removeEventListener('touchstart', handleInteraction);
+            await tryPlayBgm(true);
         }
+        // Use pointerdown for better mobile coverage; also add touchstart as fallback
+        document.body.addEventListener('pointerdown', handleInteractionOnce, { once: true, passive: true });
+        document.body.addEventListener('touchstart', handleInteractionOnce, { once: true, passive: true });
+        senderNameInput.addEventListener('pointerdown', handleInteractionOnce, { once: true, passive: true });
 
-        // Attach listeners to the body for a wider net of interaction
-        document.body.addEventListener('click', handleInteraction, { once: true });
-        document.body.addEventListener('touchstart', handleInteraction, { once: true });
-        // End of music interaction fix
+        // ====== Defer third-party scripts (ads) to avoid main-thread contention ======
+        onIdle(() => {
+            const a1 = document.createElement('script');
+            a1.type = 'text/javascript';
+            a1.text = `
+        atOptions = {'key':'5f2e175e82392c7d79a9e2b135a26c96','format':'iframe','height':50,'width':320,'params':{}};
+      `;
+            const s1 = document.createElement('script');
+            s1.src = "//www.highperformanceformat.com/5f2e175e82392c7d79a9e2b135a26c96/invoke.js";
+            s1.async = true;
+
+            const slot1 = document.getElementById('ad-slot-1');
+            slot1.appendChild(a1);
+            slot1.appendChild(s1);
+
+            const a2 = document.createElement('script');
+            a2.type = 'text/javascript';
+            a2.text = `
+        atOptions = {'key':'5f2e175e82392c7d79a9e2b135a26c96','format':'iframe','height':50,'width':320,'params':{}};
+      `;
+            const s2 = document.createElement('script');
+            s2.src = "//www.highperformanceformat.com/5f2e175e82392c7d79a9e2b135a26c96/invoke.js";
+            s2.async = true;
+
+            const slot2 = document.getElementById('ad-slot-2');
+            slot2.appendChild(a2);
+            slot2.appendChild(s2);
+        });
+
+        onIdle(() => {
+            const eg = document.createElement('script');
+            eg.src = "//pl27884794.effectivegatecpm.com/30/89/27/308927af8da3d220e2dd56eaa8d36ecb.js";
+            eg.async = true;
+            document.body.appendChild(eg);
+
+            const a3 = document.createElement('script');
+            a3.type = 'text/javascript';
+            a3.text = `atOptions={'key':'99aa9f05e964a4ea638882de0852b855','format':'iframe','height':60,'width':468,'params':{}};`;
+            const s3 = document.createElement('script');
+            s3.src = "//www.highperformanceformat.com/99aa9f05e964a4ea638882de0852b855/invoke.js";
+            s3.async = true;
+            document.body.appendChild(a3);
+            document.body.appendChild(s3);
+        });
     </script>
-
-    <script type="text/javascript"
-        src="//pl27884794.effectivegatecpm.com/30/89/27/308927af8da3d220e2dd56eaa8d36ecb.js"></script>
-
 </body>
 
 </html>
-<script type="text/javascript">
-    atOptions = {
-        'key': '99aa9f05e964a4ea638882de0852b855',
-        'format': 'iframe',
-        'height': 60,
-        'width': 468,
-        'params': {}
-    };
-</script>
-<script type="text/javascript"
-    src="//www.highperformanceformat.com/99aa9f05e964a4ea638882de0852b855/invoke.js"></script>
