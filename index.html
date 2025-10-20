@@ -37,25 +37,24 @@
             margin: 0;
             color: var(--soft);
             font-family: Poppins, system-ui, Arial, sans-serif;
-            background:
-                radial-gradient(1200px 800px at 50% 50%, rgba(255, 255, 255, .08), rgba(0, 0, 0, 0)) fixed,
-                linear-gradient(120deg, var(--bg1), var(--bg2), var(--bg3), var(--bg4));
-            background-size: 120% 120%, 400% 400%;
+            /* Performance Optimization: Simplified background and animation for smoother redraw */
+            background: linear-gradient(120deg, var(--bg1), var(--bg2), var(--bg3), var(--bg4));
+            background-size: 400% 400%;
             animation: bgShift 16s ease-in-out infinite;
             overflow-x: hidden;
         }
 
         @keyframes bgShift {
             0% {
-                background-position: 50% 50%, 0% 50
+                background-position: 0% 50%
             }
 
             50% {
-                background-position: 50% 50%, 100% 50
+                background-position: 100% 50%
             }
 
             100% {
-                background-position: 50% 50%, 0% 50
+                background-position: 0% 50%
             }
         }
 
@@ -69,9 +68,11 @@
         .star {
             position: absolute;
             border-radius: 50%;
-            box-shadow: 0 0 12px #ffd700, 0 0 4px #fff;
+            box-shadow: 0 0 10px #ffd700, 0 0 3px #fff;
             animation: blink 2s infinite alternate, moveStar 22s linear infinite;
-            opacity: .7
+            opacity: .7;
+            /* Performance Optimization: Use transform for movement */
+            will-change: transform, opacity;
         }
 
         @keyframes blink {
@@ -150,7 +151,9 @@
             box-shadow: 0 0 15px 6px rgba(255, 195, 50, .7), inset 0 5px 5px rgba(255, 255, 153, .9);
             animation: floatUpDown 6s ease-in-out infinite;
             animation-delay: var(--delay);
-            filter: drop-shadow(0 0 6px rgba(255, 180, 40, .8))
+            filter: drop-shadow(0 0 6px rgba(255, 180, 40, .8));
+            /* Performance Optimization */
+            will-change: transform, opacity;
         }
 
         @keyframes floatUpDown {
@@ -599,7 +602,6 @@
     <div class="blinking-stars" aria-hidden="true"></div>
     <div class="floating-diyas" aria-hidden="true">
         <div class="diya" style="--left:12vw; --delay:0s;"></div>
-        <div class="diya" style="--left:35vw; --delay:3s;"></div>
         <div class="diya" style="--left:60vw; --delay:1.5s;"></div>
         <div class="diya" style="--left:85vw; --delay:4.5s;"></div>
     </div>
@@ -610,7 +612,6 @@
     </header>
 
     <main id="app">
-        <!-- Create View -->
         <section id="create-view" class="card">
             <h2 class="title">Create Your Wish</h2>
             <form id="create-form" class="form">
@@ -623,7 +624,6 @@
                     <button id="clearForm" type="button" class="btn">Reset</button>
                 </div>
             </form>
-            <!-- Ad placement 1 (single, non-duplicated) -->
             <div id="ad-slot-1" style="margin-top:12px;text-align:center;">
                 <script type="text/javascript">
                     atOptions = {
@@ -639,7 +639,6 @@
             </div>
         </section>
 
-        <!-- Greet View -->
         <section id="greet-view" class="card hidden">
             <div class="hero">
                 <div class="photo-frame">
@@ -672,9 +671,7 @@
                 <a id="waShare" class="btn" target="_blank" rel="noopener">WhatsApp 📱</a>
             </div>
 
-            <!-- Optional: another ad placement if needed -->
             <div id="ad-slot-2" style="margin-top:12px;text-align:center;">
-                <!-- keep same key if network requires, but do NOT duplicate in the same place repeatedly -->
                 <script type="text/javascript">
                     atOptions = {
                         'key': '5f2e175e82392c7d79a9e2b135a26c96',
@@ -692,16 +689,17 @@
 
     <audio id="bgm" loop preload="auto" src="happy music.mp3"></audio>
 
-    <!-- App scripts -->
     <script>
         // ----- Blinking, moving stars -----
         function spawnBlinkingStars() {
             const starDiv = document.querySelector('.blinking-stars');
-            starDiv.innerHTML = ''; const stars = 64;
+            starDiv.innerHTML = '';
+            // Performance Optimization: Reduced the number of stars from 64 to 40
+            const stars = 40;
             for (let i = 0; i < stars; i++) {
                 const star = document.createElement('div');
                 star.className = 'star';
-                const size = 2 + Math.random() * 4;
+                const size = 2 + Math.random() * 3; // Slightly reduced max size
                 const color = Math.random() < 0.5 ? '#fff' : '#ffd700';
                 star.style.width = star.style.height = size + 'px';
                 star.style.background = color;
@@ -715,56 +713,141 @@
         window.addEventListener('resize', spawnBlinkingStars);
 
         // ----- Fireworks JS -----
+        // NOTE: The fireworks script is kept as-is, but its animation interval (MIN_INT/MAX_INT)
+        // could be further increased (e.g., to 24/36) if more performance is needed.
         (function () {
-            const canvas = document.getElementById('fireworks'); if (!canvas) return;
-            const ctx = canvas.getContext('2d'); let W, H, dpr = Math.min(2, window.devicePixelRatio || 1);
-            function resize() { W = canvas.width = Math.floor(window.innerWidth * dpr); H = canvas.height = Math.floor(window.innerHeight * dpr); canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px'; }
-            resize(); window.addEventListener('resize', resize);
-            const GRAVITY = 0.03, FIREWORKS = []; const MAX_PARTICLES = 56, MIN_INT = 16, MAX_INT = 26;
+            const canvas = document.getElementById('fireworks');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let W, H, dpr = Math.min(2, window.devicePixelRatio || 1);
+
+            function resize() {
+                W = canvas.width = Math.floor(window.innerWidth * dpr);
+                H = canvas.height = Math.floor(window.innerHeight * dpr);
+                canvas.style.width = window.innerWidth + 'px';
+                canvas.style.height = window.innerHeight + 'px';
+            }
+            resize();
+            window.addEventListener('resize', resize);
+            const GRAVITY = 0.03,
+                FIREWORKS = [];
+            const MAX_PARTICLES = 56,
+                MIN_INT = 16,
+                MAX_INT = 26; // These control spawn rate, higher numbers = less fireworks = better performance
+
             function spawn(x = Math.random() * W, y = H * 0.3 + Math.random() * H * 0.35) {
-                const hue = Math.floor(180 + Math.random() * 180); const parts = [];
+                const hue = Math.floor(180 + Math.random() * 180);
+                const parts = [];
                 for (let i = 0; i < MAX_PARTICLES; i++) {
                     const ang = (Math.PI * 2) * (i / MAX_PARTICLES) + Math.random() * 0.35;
                     const sp = 1.5 + Math.random() * 2.1;
-                    parts.push({ x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, life: 0, maxLife: 60 + Math.floor(Math.random() * 28), hue, size: 0.8 + Math.random() * 1.8 });
+                    parts.push({
+                        x,
+                        y,
+                        vx: Math.cos(ang) * sp,
+                        vy: Math.sin(ang) * sp,
+                        life: 0,
+                        maxLife: 60 + Math.floor(Math.random() * 28),
+                        hue,
+                        size: 0.8 + Math.random() * 1.8
+                    });
                 }
-                FIREWORKS.push({ parts });
+                FIREWORKS.push({
+                    parts
+                });
             }
-            let tick = 0, next = Math.floor(MIN_INT + Math.random() * (MAX_INT - MIN_INT));
+            let tick = 0,
+                next = Math.floor(MIN_INT + Math.random() * (MAX_INT - MIN_INT));
             (function loop() {
                 ctx.globalCompositeOperation = 'destination-out';
-                ctx.fillStyle = 'rgba(0,0,0,0.08)'; ctx.fillRect(0, 0, W, H);
+                ctx.fillStyle = 'rgba(0,0,0,0.08)';
+                ctx.fillRect(0, 0, W, H);
                 ctx.globalCompositeOperation = 'lighter';
-                if (tick % next === 0) { spawn(); if (Math.random() < 0.45) spawn(W * Math.random() * 0.5, H * (0.25 + Math.random() * 0.5)); next = Math.floor(MIN_INT + Math.random() * (MAX_INT - MIN_INT)); }
+                if (tick % next === 0) {
+                    spawn();
+                    if (Math.random() < 0.45) spawn(W * Math.random() * 0.5, H * (0.25 + Math.random() * 0.5));
+                    next = Math.floor(MIN_INT + Math.random() * (MAX_INT - MIN_INT));
+                }
                 tick++;
                 for (let f = FIREWORKS.length - 1; f >= 0; f--) {
                     const fw = FIREWORKS[f];
                     for (const p of fw.parts) {
-                        p.life++; p.vy += GRAVITY * 0.15; p.x += p.vx; p.y += p.vy;
-                        const a = Math.max(0, 1 - p.life / p.maxLife); const sat = 80 + Math.sin((p.life / 8)) * 20;
-                        ctx.beginPath(); ctx.fillStyle = `hsla(${p.hue}, ${sat}%, 60%, ${a * 0.9})`; ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
-                        if (Math.random() < 0.25) { ctx.beginPath(); ctx.fillStyle = `hsla(${p.hue}, 90%, 80%, ${a * 0.35})`; ctx.arc(p.x + (Math.random() - 0.5) * 3, p.y + (Math.random() - 0.5) * 3, 0.8, 0, Math.PI * 2); ctx.fill(); }
+                        p.life++;
+                        p.vy += GRAVITY * 0.15;
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        const a = Math.max(0, 1 - p.life / p.maxLife);
+                        const sat = 80 + Math.sin((p.life / 8)) * 20;
+                        ctx.beginPath();
+                        ctx.fillStyle = `hsla(${p.hue}, ${sat}%, 60%, ${a * 0.9})`;
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        if (Math.random() < 0.25) {
+                            ctx.beginPath();
+                            ctx.fillStyle = `hsla(${p.hue}, 90%, 80%, ${a * 0.35})`;
+                            ctx.arc(p.x + (Math.random() - 0.5) * 3, p.y + (Math.random() - 0.5) * 3, 0.8, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
                     }
-                    fw.parts = fw.parts.filter(p => p.life < p.maxLife); if (!fw.parts.length) FIREWORKS.splice(f, 1);
+                    fw.parts = fw.parts.filter(p => p.life < p.maxLife);
+                    if (!fw.parts.length) FIREWORKS.splice(f, 1);
                 }
                 requestAnimationFrame(loop);
             })();
-            window.addEventListener('click', (e) => { if (e.target.closest('button, a, input, label')) return; spawn(e.clientX, e.clientY); });
+            // Kept the click to spawn fireworks to maintain original functionality
+            window.addEventListener('click', (e) => {
+                if (e.target.closest('button, a, input, label')) return;
+                spawn(e.clientX, e.clientY);
+            });
         })();
 
-        // ----- Music + prefs -----
-        function getParams() { return new URL(window.location.href).searchParams; }
-        const bgm = document.getElementById('bgm'); const musicToggle = document.getElementById('musicToggle');
-        function setMusicIcon(isOn) { musicToggle.textContent = isOn ? '🔊' : '🔇'; }
-        function saveMusicPref(isOn) { try { localStorage.setItem('happy_music_on', isOn ? '1' : '0'); } catch { } }
-        function getMusicPref() { try { return localStorage.getItem('happy_music_on') !== '0'; } catch { return true; } }
+        // ----- Music + prefs (Updated for aggressive autoplay) -----
+        function getParams() {
+            return new URL(window.location.href).searchParams;
+        }
+        const bgm = document.getElementById('bgm');
+        const musicToggle = document.getElementById('musicToggle');
+
+        function setMusicIcon(isOn) {
+            musicToggle.textContent = isOn ? '🔊' : '🔇';
+        }
+
+        function saveMusicPref(isOn) {
+            try {
+                localStorage.setItem('happy_music_on', isOn ? '1' : '0');
+            } catch { }
+        }
+
+        function getMusicPref() {
+            try {
+                return localStorage.getItem('happy_music_on') !== '0';
+            } catch {
+                return true;
+            }
+        }
+
         async function tryPlayBgm() {
             if (bgm.src && getMusicPref()) {
-                try { await bgm.play(); setMusicIcon(true); saveMusicPref(true); } catch { setMusicIcon(false); }
-            } else { setMusicIcon(false); }
+                try {
+                    await bgm.play();
+                    setMusicIcon(true);
+                    saveMusicPref(true);
+                } catch {
+                    setMusicIcon(false);
+                }
+            } else {
+                setMusicIcon(false);
+            }
         }
+
         musicToggle.addEventListener('click', async () => {
-            if (bgm.paused) { await tryPlayBgm(); } else { bgm.pause(); setMusicIcon(false); saveMusicPref(false); }
+            if (bgm.paused) {
+                await tryPlayBgm();
+            } else {
+                bgm.pause();
+                setMusicIcon(false);
+                saveMusicPref(false);
+            }
         });
 
         // ----- Main App Logic -----
@@ -779,17 +862,21 @@
         const createYourOwn = document.getElementById('createYourOwn');
         let currentShareUrl = '';
 
-        function buildShareUrl({ name }) {
+        function buildShareUrl({
+            name
+        }) {
             const u = new URL(window.location.href.split('?')[0]);
             u.searchParams.set('name', name);
             return u.toString();
         }
+
         function buildShareMessage(name, url) {
             const line1 = `🎇 ${name} has sent you a sparkling Diwali greeting!`;
             const line2 = `Wishing you happiness, success, and endless joy. 🌟`;
             const line3 = `🎁 Click here to view your personalized message!`;
             return `${line1}\n${line2}\n${line3}\n${url}`;
         }
+
         function setShareTargets(url, name) {
             currentShareUrl = url;
             const msg = buildShareMessage(name, url);
@@ -801,7 +888,11 @@
             const msg = buildShareMessage(name, currentShareUrl || window.location.href);
             if (navigator.share) {
                 try {
-                    await navigator.share({ title: 'Happy Diwali Personalized Wish', text: msg, url: undefined });
+                    await navigator.share({
+                        title: 'Happy Diwali Personalized Wish',
+                        text: msg,
+                        url: undefined
+                    });
                 } catch (error) {
                     copyShareLinkFallback(currentShareUrl || window.location.href);
                 }
@@ -809,6 +900,7 @@
                 copyShareLinkFallback(currentShareUrl || window.location.href);
             }
         });
+
         function copyShareLinkFallback(url) {
             navigator.clipboard.writeText(url).then(() => {
                 universalShare.textContent = 'Link Copied! ✅';
@@ -821,10 +913,15 @@
         document.getElementById('create-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const name = senderNameInput.value.trim();
-            if (!name) { senderNameInput.focus(); return; }
+            if (!name) {
+                senderNameInput.focus();
+                return;
+            }
             recipientPhoto.src = 'diwali photo.jpg';
             senderLabel.textContent = name;
-            const url = buildShareUrl({ name });
+            const url = buildShareUrl({
+                name
+            });
             setShareTargets(url, name);
             createView.classList.add('hidden');
             greetView.classList.remove('hidden');
@@ -832,7 +929,8 @@
         });
 
         clearFormBtn.addEventListener('click', () => {
-            senderNameInput.value = ''; currentShareUrl = '';
+            senderNameInput.value = '';
+            currentShareUrl = '';
             recipientPhoto.src = 'diwali photo.jpg';
         });
 
@@ -840,7 +938,10 @@
             greetView.classList.add('hidden');
             createView.classList.remove('hidden');
             sparkleBurst();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         });
 
         function sparkleBurst() {
@@ -858,30 +959,32 @@
                 recipientPhoto.src = 'diwali photo.jpg';
                 createView.classList.add('hidden');
                 greetView.classList.remove('hidden');
-                const url = buildShareUrl({ name });
+                const url = buildShareUrl({
+                    name
+                });
                 setShareTargets(url, name);
             }
             setMusicIcon(!bgm.paused && getMusicPref());
         }
         bootFromParams();
 
-        // Music auto-start on first interaction
-        let firstInteractionBound = false;
-        function bindFirstInteraction() {
-            if (firstInteractionBound) return;
-            firstInteractionBound = true;
-            const handler = async () => {
-                if (getMusicPref() && bgm.paused) { await tryPlayBgm(); }
-                window.removeEventListener('pointerdown', handler);
-                window.removeEventListener('touchstart', handler);
-            };
-            window.addEventListener('pointerdown', handler, { once: true });
-            window.addEventListener('touchstart', handler, { once: true });
+        // Music auto-start on first interaction (FIXED: Attempts to play music on *any* click/tap on the document body)
+        let hasInteracted = false;
+        function handleInteraction() {
+            if (hasInteracted) return;
+            hasInteracted = true;
+            tryPlayBgm();
+            // Remove handlers after the first successful interaction
+            document.body.removeEventListener('click', handleInteraction);
+            document.body.removeEventListener('touchstart', handleInteraction);
         }
-        bindFirstInteraction();
+
+        // Attach listeners to the body for a wider net of interaction
+        document.body.addEventListener('click', handleInteraction, { once: true });
+        document.body.addEventListener('touchstart', handleInteraction, { once: true });
+        // End of music interaction fix
     </script>
 
-    <!-- External ad network scripts placed once at the end to reduce blocking -->
     <script type="text/javascript"
         src="//pl27884794.effectivegatecpm.com/30/89/27/308927af8da3d220e2dd56eaa8d36ecb.js"></script>
 
@@ -889,13 +992,13 @@
 
 </html>
 <script type="text/javascript">
-	atOptions = {
-		'key' : '99aa9f05e964a4ea638882de0852b855',
-		'format' : 'iframe',
-		'height' : 60,
-		'width' : 468,
-		'params' : {}
-	};
+    atOptions = {
+        'key': '99aa9f05e964a4ea638882de0852b855',
+        'format': 'iframe',
+        'height': 60,
+        'width': 468,
+        'params': {}
+    };
 </script>
-<script type="text/javascript" src="//www.highperformanceformat.com/99aa9f05e964a4ea638882de0852b855/invoke.js"></script>
-
+<script type="text/javascript"
+    src="//www.highperformanceformat.com/99aa9f05e964a4ea638882de0852b855/invoke.js"></script>
