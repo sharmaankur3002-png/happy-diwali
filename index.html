@@ -60,7 +60,6 @@
             }
         }
 
-        /* Layers */
         #fireworks {
             position: fixed;
             inset: 0;
@@ -663,29 +662,25 @@
         </section>
     </main>
 
-    <!-- Preload and allow inline playback for iOS -->
+    <!-- iOS/Android: inline playback allowed -->
     <audio id="bgm" loop preload="auto" playsinline webkit-playsinline src="happy music.mp3"></audio>
 
     <script>
-        // ====== Perf helpers: idle scheduling and throttling ======
-        const onIdle = (fn) => ('requestIdleCallback' in window) ? requestIdleCallback(fn, { timeout: 1500 }) : setTimeout(fn, 0); // [MDN perf patterns]
-        const defer = (fn) => setTimeout(fn, 0);
+        // ---------- Helpers ----------
+        const onIdle = (fn) => ('requestIdleCallback' in window) ? requestIdleCallback(fn, { timeout: 1500 }) : setTimeout(fn, 0);
 
-        // ====== Stars (reduced count, re-spawn on resize with debounce) ======
+        // ---------- Stars ----------
         function spawnBlinkingStars() {
             const starDiv = document.querySelector('.blinking-stars');
             starDiv.innerHTML = '';
             const width = window.innerWidth;
-            const height = window.innerHeight;
-            // Fewer stars on mobile to avoid jank
-            const base = width < 600 ? 26 : 40;
-            for (let i = 0; i < base; i++) {
+            const count = width < 600 ? 26 : 40;
+            for (let i = 0; i < count; i++) {
                 const star = document.createElement('div');
                 star.className = 'star';
                 const size = 1.6 + Math.random() * (width < 600 ? 2.2 : 3);
-                const color = Math.random() < 0.5 ? '#fff' : '#ffd700';
                 star.style.width = star.style.height = size + 'px';
-                star.style.background = color;
+                star.style.background = Math.random() < 0.5 ? '#fff' : '#ffd700';
                 star.style.left = (Math.random() * 100) + '%';
                 star.style.top = (Math.random() * 100) + '%';
                 star.style.animationDelay = (Math.random() * 2.5) + 's, ' + (Math.random() * 25) + 's';
@@ -693,39 +688,31 @@
             }
         }
         spawnBlinkingStars();
-        let resizeTimer;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(spawnBlinkingStars, 150);
-        });
+        let rzT; window.addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(spawnBlinkingStars, 150); });
 
-        // ====== Fireworks (RAF optimized, capped FPS, lower particles on mobile) ======
+        // ---------- Fireworks (optimized) ----------
         (function () {
-            const canvas = document.getElementById('fireworks');
-            if (!canvas) return;
+            const canvas = document.getElementById('fireworks'); if (!canvas) return;
             const ctx = canvas.getContext('2d');
             let W, H, dpr = Math.min(2, window.devicePixelRatio || 1);
-
             function resize() {
                 W = canvas.width = Math.floor(window.innerWidth * dpr);
                 H = canvas.height = Math.floor(window.innerHeight * dpr);
                 canvas.style.width = window.innerWidth + 'px';
                 canvas.style.height = window.innerHeight + 'px';
             }
-            resize();
-            window.addEventListener('resize', () => { defer(resize); });
+            resize(); window.addEventListener('resize', () => setTimeout(resize, 0));
 
             const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
             const GRAVITY = 0.03;
             const FIREWORKS = [];
-            const MAX_PARTICLES = isMobile ? 36 : 56;   // reduce particles on mobile [MDN canvas optimize]
-            const MIN_INT = isMobile ? 20 : 16;         // spawn interval bounds (higher = fewer spawns)
+            const MAX_PARTICLES = isMobile ? 36 : 56;
+            const MIN_INT = isMobile ? 20 : 16;
             const MAX_INT = isMobile ? 32 : 26;
 
-            // Cap FPS to ease main thread pressure [rAF best practices]
             const TARGET_FPS = isMobile ? 45 : 60;
-            const FRAME_INTERVAL = 1000 / TARGET_FPS;
-            let lastTime = performance.now();
+            const FRAME_MS = 1000 / TARGET_FPS;
+            let last = performance.now();
             let tick = 0, next = Math.floor(MIN_INT + Math.random() * (MAX_INT - MIN_INT));
 
             function spawn(x = Math.random() * W, y = H * 0.3 + Math.random() * H * 0.35) {
@@ -735,9 +722,8 @@
                     const ang = (Math.PI * 2) * (i / MAX_PARTICLES) + Math.random() * 0.35;
                     const sp = 1.5 + Math.random() * 2.1;
                     parts.push({
-                        x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
-                        life: 0, maxLife: 52 + Math.floor(Math.random() * 24), // slightly reduced
-                        hue, size: 0.8 + Math.random() * 1.6
+                        x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, life: 0,
+                        maxLife: 52 + Math.floor(Math.random() * 24), hue, size: 0.8 + Math.random() * 1.6
                     });
                 }
                 FIREWORKS.push({ parts });
@@ -745,9 +731,8 @@
 
             function loop(now) {
                 requestAnimationFrame(loop);
-                const delta = now - lastTime;
-                if (delta < FRAME_INTERVAL) return; // skip to throttle FPS
-                lastTime = now;
+                if (now - last < FRAME_MS) return;
+                last = now;
 
                 ctx.globalCompositeOperation = 'destination-out';
                 ctx.fillStyle = 'rgba(0,0,0,0.08)';
@@ -764,9 +749,7 @@
                 for (let f = FIREWORKS.length - 1; f >= 0; f--) {
                     const fw = FIREWORKS[f];
                     for (const p of fw.parts) {
-                        p.life++;
-                        p.vy += GRAVITY * 0.15;
-                        p.x += p.vx; p.y += p.vy;
+                        p.life++; p.vy += GRAVITY * 0.15; p.x += p.vx; p.y += p.vy;
                         const a = Math.max(0, 1 - p.life / p.maxLife);
                         const sat = 80 + Math.sin((p.life / 8)) * 20;
                         ctx.beginPath();
@@ -788,45 +771,62 @@
 
             window.addEventListener('click', (e) => {
                 if (e.target.closest('button, a, input, label')) return;
-                spawn(e.clientX * dpr, e.clientY * dpr);
+                spawn((e.clientX) * dpr, (e.clientY) * dpr);
             }, { passive: true });
         })();
 
-        // ====== Music logic with strong mobile support ======
-        // Policy: Autoplay requires user gesture; implement first-tap play reliably, esp. iOS [MDN Autoplay]
+        // ---------- Music (iOS + Android reliable first-gesture) ----------
         function getParams() { return new URL(window.location.href).searchParams; }
         const bgm = document.getElementById('bgm');
         const musicToggle = document.getElementById('musicToggle');
 
-        function setMusicIcon(isOn) { musicToggle.textContent = isOn ? '🔊' : '🔇'; }
-        function saveMusicPref(isOn) { try { localStorage.setItem('happy_music_on', isOn ? '1' : '0'); } catch { } }
-        function getMusicPref() { try { return localStorage.getItem('happy_music_on') !== '0'; } catch { return true; } }
+        function setMusicIcon(on) { musicToggle.textContent = on ? '🔊' : '🔇'; }
+        function savePref(on) { try { localStorage.setItem('happy_music_on', on ? '1' : '0'); } catch { } }
+        function getPref() { try { return localStorage.getItem('happy_music_on') !== '0'; } catch { return true; } }
 
-        // iOS requires playsinline and a direct gesture on the element or within same task chain [MDN Autoplay]
-        async function tryPlayBgm(force = false) {
+        async function playSafe(force = false) {
             if (!bgm.src) return;
-            if (!force && !getMusicPref()) { setMusicIcon(false); return; }
-            // Ensure ready
-            try { await bgm.play(); setMusicIcon(true); saveMusicPref(true); }
-            catch (e) {
-                // Fallback: set muted true -> play -> unmute pattern helps some WebKit builds for first-resume [industry workaround]
+            if (!force && !getPref()) { setMusicIcon(false); return; }
+            try {
+                await bgm.play();
+                setMusicIcon(true); savePref(true);
+            } catch (e) {
                 try {
-                    bgm.muted = true;
+                    bgm.muted = true;           // iOS workaround
                     await bgm.play();
-                    setTimeout(() => { bgm.muted = false; }, 200);
-                    setMusicIcon(true); saveMusicPref(true);
+                    setTimeout(() => bgm.muted = false, 200);
+                    setMusicIcon(true); savePref(true);
                 } catch {
                     setMusicIcon(false);
                 }
             }
         }
 
-        musicToggle.addEventListener('click', async () => {
-            if (bgm.paused) { await tryPlayBgm(true); }
-            else { bgm.pause(); setMusicIcon(false); saveMusicPref(false); }
+        musicToggle.addEventListener('click', () => {
+            if (bgm.paused) playSafe(true);
+            else { bgm.pause(); setMusicIcon(false); savePref(false); }
+        }, { passive: true });
+
+        // First valid gesture hooks (capture phase to increase success on iOS)
+        let unlocked = false;
+        function unlockOnce() {
+            if (unlocked) return;
+            unlocked = true;
+            playSafe(true);
+            window.removeEventListener('click', unlockOnce, true);
+            window.removeEventListener('pointerup', unlockOnce, true);
+            window.removeEventListener('keydown', unlockOnce, true);
+        }
+        window.addEventListener('click', unlockOnce, true);
+        window.addEventListener('pointerup', unlockOnce, true);
+        window.addEventListener('keydown', unlockOnce, true);
+
+        // Resume attempt when returning to tab (some iOS versions suspend)
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && getPref()) playSafe();
         });
 
-        // ====== App state ======
+        // ---------- App logic ----------
         const createView = document.getElementById('create-view');
         const greetView = document.getElementById('greet-view');
         const senderNameInput = document.getElementById('senderName');
@@ -838,11 +838,7 @@
         const createYourOwn = document.getElementById('createYourOwn');
         let currentShareUrl = '';
 
-        function buildShareUrl({ name }) {
-            const u = new URL(window.location.href.split('?')[0]);
-            u.searchParams.set('name', name);
-            return u.toString();
-        }
+        function buildShareUrl({ name }) { const u = new URL(window.location.href.split('?')[0]); u.searchParams.set('name', name); return u.toString(); }
         function buildShareMessage(name, url) {
             const line1 = `🎇 ${name} has sent you a sparkling Diwali greeting!`;
             const line2 = `Wishing you happiness, success, and endless joy. 🌟`;
@@ -860,11 +856,8 @@
             const name = senderNameInput.value.trim() || senderLabel.textContent.trim() || 'Someone';
             const msg = buildShareMessage(name, currentShareUrl || window.location.href);
             if (navigator.share) {
-                try {
-                    await navigator.share({ title: 'Happy Diwali Personalized Wish', text: msg });
-                } catch {
-                    copyShareLinkFallback(currentShareUrl || window.location.href);
-                }
+                try { await navigator.share({ title: 'Happy Diwali Personalized Wish', text: msg }); }
+                catch { copyShareLinkFallback(currentShareUrl || window.location.href); }
             } else {
                 copyShareLinkFallback(currentShareUrl || window.location.href);
             }
@@ -874,9 +867,7 @@
             navigator.clipboard.writeText(url).then(() => {
                 universalShare.textContent = 'Link Copied! ✅';
                 setTimeout(() => universalShare.textContent = 'Share Link 🔗', 1500);
-            }).catch(() => {
-                alert('Could not copy link. Please manually copy this link: ' + url);
-            });
+            }).catch(() => alert('Could not copy link. Please manually copy this link: ' + url));
         }
 
         document.getElementById('create-form').addEventListener('submit', (e) => {
@@ -923,66 +914,35 @@
                 const url = buildShareUrl({ name });
                 setShareTargets(url, name);
             }
-            setMusicIcon(!bgm.paused && getMusicPref());
+            setMusicIcon(!bgm.paused && getPref());
         }
         bootFromParams();
 
-        // ====== Mobile-first gesture hook for audio ======
-        // Attach to body and also to first input focus to catch iOS taps reliably [MDN Autoplay]
-        let hasInteracted = false;
-        async function handleInteractionOnce() {
-            if (hasInteracted) return;
-            hasInteracted = true;
-            await tryPlayBgm(true);
-        }
-        // Use pointerdown for better mobile coverage; also add touchstart as fallback
-        document.body.addEventListener('pointerdown', handleInteractionOnce, { once: true, passive: true });
-        document.body.addEventListener('touchstart', handleInteractionOnce, { once: true, passive: true });
-        senderNameInput.addEventListener('pointerdown', handleInteractionOnce, { once: true, passive: true });
-
-        // ====== Defer third-party scripts (ads) to avoid main-thread contention ======
+        // ---------- Defer ads (perf) ----------
         onIdle(() => {
             const a1 = document.createElement('script');
             a1.type = 'text/javascript';
-            a1.text = `
-        atOptions = {'key':'5f2e175e82392c7d79a9e2b135a26c96','format':'iframe','height':50,'width':320,'params':{}};
-      `;
-            const s1 = document.createElement('script');
-            s1.src = "//www.highperformanceformat.com/5f2e175e82392c7d79a9e2b135a26c96/invoke.js";
-            s1.async = true;
-
-            const slot1 = document.getElementById('ad-slot-1');
-            slot1.appendChild(a1);
-            slot1.appendChild(s1);
+            a1.text = `atOptions={'key':'5f2e175e82392c7d79a9e2b135a26c96','format':'iframe','height':50,'width':320,'params':{}};`;
+            const s1 = document.createElement('script'); s1.src = "//www.highperformanceformat.com/5f2e175e82392c7d79a9e2b135a26c96/invoke.js"; s1.async = true;
+            document.getElementById('ad-slot-1').appendChild(a1); document.getElementById('ad-slot-1').appendChild(s1);
 
             const a2 = document.createElement('script');
             a2.type = 'text/javascript';
-            a2.text = `
-        atOptions = {'key':'5f2e175e82392c7d79a9e2b135a26c96','format':'iframe','height':50,'width':320,'params':{}};
-      `;
-            const s2 = document.createElement('script');
-            s2.src = "//www.highperformanceformat.com/5f2e175e82392c7d79a9e2b135a26c96/invoke.js";
-            s2.async = true;
-
-            const slot2 = document.getElementById('ad-slot-2');
-            slot2.appendChild(a2);
-            slot2.appendChild(s2);
+            a2.text = `atOptions={'key':'5f2e175e82392c7d79a9e2b135a26c96','format':'iframe','height':50,'width':320,'params':{}};`;
+            const s2 = document.createElement('script'); s2.src = "//www.highperformanceformat.com/5f2e175e82392c7d79a9e2b135a26c96/invoke.js"; s2.async = true;
+            document.getElementById('ad-slot-2').appendChild(a2); document.getElementById('ad-slot-2').appendChild(s2);
         });
 
         onIdle(() => {
             const eg = document.createElement('script');
             eg.src = "//pl27884794.effectivegatecpm.com/30/89/27/308927af8da3d220e2dd56eaa8d36ecb.js";
-            eg.async = true;
-            document.body.appendChild(eg);
+            eg.async = true; document.body.appendChild(eg);
 
             const a3 = document.createElement('script');
             a3.type = 'text/javascript';
             a3.text = `atOptions={'key':'99aa9f05e964a4ea638882de0852b855','format':'iframe','height':60,'width':468,'params':{}};`;
-            const s3 = document.createElement('script');
-            s3.src = "//www.highperformanceformat.com/99aa9f05e964a4ea638882de0852b855/invoke.js";
-            s3.async = true;
-            document.body.appendChild(a3);
-            document.body.appendChild(s3);
+            const s3 = document.createElement('script'); s3.src = "//www.highperformanceformat.com/99aa9f05e964a4ea638882de0852b855/invoke.js"; s3.async = true;
+            document.body.appendChild(a3); document.body.appendChild(s3);
         });
     </script>
 </body>
